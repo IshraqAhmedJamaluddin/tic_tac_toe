@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <title>Tic Tac Toe</title>
+    <style>
+        body {
+            height: 100vh;
+        }
+        .board {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            -ms-transform: translate(-50%, -50%);
+            transform: translate(-50%, -50%);
+            max-width: 50%;
+        }
+        .board_item {
+            margin: 0.2em;
+            padding-top: 15px;
+            padding-bottom: 15px;
+            background-color: rgb(180, 88, 134);
+            font-size: 3rem;
+            border-radius: 0.5em;
+        }
+        .board_item:hover {
+            cursor: pointer;
+        }
+        .title {
+            font-size: 3rem;
+        }
+        #turn {
+            font-weight: bolder;
+            olor: rgb(180, 88, 134);
+        }
+    </style>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+</head>
+<body>
+    <div class="title container text-center">It's <span id="turn">{{ turn }}</span>'s turn</div>
+    <div class="board container">
+        {% for item in board %}
+            {% if loop.index == 1 or loop.index == 4 or loop.index == 7 %}
+                <div class="row">
+            {% endif %}
+                <div id="{{ loop.index-1 }}" class="align-middle text-center col board_item"></div>
+            {% if loop.index == 3 or loop.index == 6 or loop.index == 9 %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    <script>
+        function resize_blocks(){
+            const width = $('.board_item').width();
+            $('.board_item').css({'height': width+'px'})
+            $('.board_item').css({'font-size': width/50+'rem'})
+        }
+        resize_blocks()
+        $(window).resize(() => {
+            resize_blocks()
+        })
+
+        $('.board_item').click(() => { played(event.target) })
+        function played(place) {
+            if (!(place.innerHTML == 'X' || place.innerHTML == "O" )) {
+                const turn = $('#turn').text()
+                data = {
+                    'player': turn,
+                    'index': place.id
+                }
+                $.ajax({
+                    type: 'POST',
+                    url: '/',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: (response) => {
+                        place.innerHTML = turn
+                        const winner = response['winner']
+                        if (winner == -1) {
+                            //continue the game
+                            if (turn == "X") {
+                                $('#turn').text("O")
+                            } else {
+                                $('#turn').text("X")
+                            }
+                        } else if (winner == -2) {
+                            alert('Tie!\nPlay again?')
+                            document.location.reload()
+                        } else {
+                            alert(winner + ' won the game!\nPlay again?')
+                            document.location.reload()
+                        }
+                    }
+                })
+            }
+        }
+    </script>
+</body>
+</html>
